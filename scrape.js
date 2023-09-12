@@ -45,11 +45,13 @@ async function scrape(text) {
   } catch (err) {
     console.error(err);
     browser?.close();
+    page = null;
     console.error("Error occured while scraping");
   } finally {
     setTimeout(() => {
       console.error("Stopped Puppeteer!");
       browser?.close();
+      page = null;
     }, 30 * 60 * 1000);
   }
 }
