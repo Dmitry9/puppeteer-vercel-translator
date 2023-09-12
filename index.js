@@ -1,41 +1,18 @@
-const app = require("express")();
+const express = require("express");
+const { scrape } = require("./scrape");
 
-let chrome = {};
-let puppeteer;
+const app = express();
+const PORT = process.env.PORT || 4000;
 
-if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-  chrome = require("chrome-aws-lambda");
-  puppeteer = require("puppeteer-core");
-} else {
-  puppeteer = require("puppeteer");
-}
-
-app.get("/api", async (req, res) => {
-  let options = {};
-
-  if (process.env.AWS_LAMBDA_FUNCTION_VERSION) {
-    options = {
-      args: [...chrome.args, "--hide-scrollbars", "--disable-web-security"],
-      defaultViewport: chrome.defaultViewport,
-      executablePath: await chrome.executablePath,
-      headless: true,
-      ignoreHTTPSErrors: true,
-    };
-  }
-
-  try {
-    let browser = await puppeteer.launch(options);
-    let page = await browser.newPage();
-    await page.goto("https://www.google.com");
-    res.send(await page.title());
-  } catch (err) {
-    console.error(err);
-    return null;
-  }
+app.get("/scrape", async (req, res) => {
+  const translated = await scrape(decodeURI(req.query.text));
+  res.send(translated);
 });
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log("Server started");
+app.get("/", (req, res) => {
+  res.send("Render Puppeteer server is up and running!");
 });
 
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`Listening on port ${PORT}`);
+});
