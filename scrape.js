@@ -1,10 +1,15 @@
 const puppeteer = require("puppeteer");
 require("dotenv").config();
 
-const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-
+// https://www.youtube.com/watch?v=6cm6G78ZDmM
+// https://puppeteer-translator.onrender.com/scrape?text=absolutelly
 let browser;
 let page;
+const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+const reset = () => {
+  page = null;
+  browser?.close();
+};
 
 async function scrape(text) {
   try {
@@ -31,27 +36,27 @@ async function scrape(text) {
       await page.goto("https://translate.google.com/?tl=ru");
     }
 
-    await delay(2000);
+    // await delay(2000);
+    await page.waitForSelector("textarea");
     await page.evaluate(() => {
       document.querySelector("textarea").value = "";
     });
     await page.type("textarea", text);
-    await delay(2000);
+    // await delay(2000);
+    await page.waitForSelector("textarea");
     const els = await page.$$('span[lang="ru"]');
     const arr = await Promise.all(
       els.slice(-2).map((el) => el.evaluate((e) => e.innerText))
     );
     return arr.join("... ");
   } catch (err) {
-    console.error(err);
-    browser?.close();
-    page = null;
     console.error("Error occured while scraping");
+    console.error(err);
+    reset();
   } finally {
     setTimeout(() => {
       console.error("Stopped Puppeteer!");
-      browser?.close();
-      page = null;
+      reset();
     }, 30 * 60 * 1000);
   }
 }
