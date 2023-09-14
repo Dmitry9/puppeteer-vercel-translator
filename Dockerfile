@@ -7,5 +7,7 @@ WORKDIR /usr/src/app
 
 COPY package*.json ./
 RUN npm ci
+
+EXPOSE 4000
 COPY . .
 CMD [ "node", "index.js" ]
